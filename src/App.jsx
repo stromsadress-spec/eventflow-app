@@ -107,6 +107,7 @@ function App() {
         work_orders: [],
         notes: [],
         links: [],
+        shared_images: [],
         brand: {
           logos: [],
           colors: [],

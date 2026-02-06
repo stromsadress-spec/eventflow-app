@@ -226,6 +226,91 @@ export default function ProjectView({ project, onBack, onUpdate, onDelete, darkM
             )}
           </div>
         </div>
+
+        {/* Shared Images Section - Visible on all tabs */}
+        <div className="mt-6 bg-white dark:bg-gray-800 p-6 rounded-xl border dark:border-gray-700">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="font-semibold dark:text-white">📷 Bilder</h3>
+            <div>
+              <input
+                type="file"
+                accept="image/*"
+                onChange={async (e) => {
+                  const file = e.target.files?.[0]
+                  if (file) {
+                    const compressed = await compressImage(file)
+                    setEditedProject({
+                      ...editedProject,
+                      shared_images: [...(editedProject.shared_images || []), {
+                        id: Date.now().toString(),
+                        image: compressed,
+                        caption: '',
+                        timestamp: new Date().toISOString()
+                      }]
+                    })
+                  }
+                }}
+                className="hidden"
+                id="shared-image-upload"
+              />
+              <label
+                htmlFor="shared-image-upload"
+                className="px-3 py-1 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 cursor-pointer"
+              >
+                + Lägg till bild
+              </label>
+            </div>
+          </div>
+
+          {(editedProject.shared_images || []).length === 0 ? (
+            <p className="text-gray-500 dark:text-gray-400 text-sm text-center py-8">
+              Inga bilder än. Klicka på "+ Lägg till bild" för att ladda upp.
+            </p>
+          ) : (
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+              {(editedProject.shared_images || []).map(img => (
+                <div key={img.id} className="group relative border dark:border-gray-700 rounded-lg overflow-hidden">
+                  <img
+                    src={img.image}
+                    alt={img.caption || 'Bild'}
+                    className="w-full h-48 object-cover"
+                  />
+                  <div className="p-2">
+                    <input
+                      type="text"
+                      value={img.caption || ''}
+                      onChange={(e) => {
+                        setEditedProject({
+                          ...editedProject,
+                          shared_images: editedProject.shared_images.map(i =>
+                            i.id === img.id ? { ...i, caption: e.target.value } : i
+                          )
+                        })
+                      }}
+                      placeholder="Bildtext..."
+                      className="w-full text-xs dark:text-gray-200 dark:bg-transparent bg-transparent border-0 outline-none placeholder-gray-400 dark:placeholder-gray-500"
+                    />
+                  </div>
+                  <button
+                    onClick={() => {
+                      if (confirm('Är du säker på att du vill ta bort denna bild?')) {
+                        setEditedProject({
+                          ...editedProject,
+                          shared_images: editedProject.shared_images.filter(i => i.id !== img.id)
+                        })
+                      }
+                    }}
+                    className="absolute top-2 right-2 p-1 bg-red-600 text-white rounded-full hover:bg-red-700 opacity-0 group-hover:opacity-100 transition"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
       </main>
     </div>
   )
