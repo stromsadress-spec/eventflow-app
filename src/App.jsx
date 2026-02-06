@@ -41,6 +41,20 @@ function App() {
   const [projects, setProjects] = useState([])
   const [currentView, setCurrentView] = useState('home')
   const [currentProject, setCurrentProject] = useState(null)
+  const [darkMode, setDarkMode] = useState(() => {
+    const saved = localStorage.getItem('darkMode')
+    return saved ? JSON.parse(saved) : false
+  })
+
+  // Dark mode effect
+  useEffect(() => {
+    if (darkMode) {
+      document.documentElement.classList.add('dark')
+    } else {
+      document.documentElement.classList.remove('dark')
+    }
+    localStorage.setItem('darkMode', JSON.stringify(darkMode))
+  }, [darkMode])
 
   useEffect(() => {
     // Check active sessions
@@ -92,6 +106,7 @@ function App() {
         risks: [],
         work_orders: [],
         notes: [],
+        links: [],
         brand: {
           logos: [],
           colors: [],
@@ -161,12 +176,16 @@ function App() {
     setCurrentView('project')
   }
 
+  const toggleDarkMode = () => {
+    setDarkMode(!darkMode)
+  }
+
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Laddar...</p>
+          <p className="text-gray-600 dark:text-gray-400">Laddar...</p>
         </div>
       </div>
     )
@@ -183,6 +202,8 @@ function App() {
         onOpenProject={openProject}
         onAddProject={addProject}
         onSignOut={() => supabase.auth.signOut()}
+        darkMode={darkMode}
+        toggleDarkMode={toggleDarkMode}
       />
     )
   }
@@ -197,6 +218,8 @@ function App() {
         }}
         onUpdate={updateProject}
         onDelete={deleteProject}
+        darkMode={darkMode}
+        toggleDarkMode={toggleDarkMode}
       />
     )
   }
