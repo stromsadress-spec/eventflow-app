@@ -92,18 +92,15 @@ export default function ProjectView({ project, onBack, onUpdate, onDelete, darkM
             <h3 className="font-semibold dark:text-white">📝 Anteckningar</h3>
             <button
               onClick={() => {
-                const noteText = prompt('Skriv din anteckning:')
-                if (noteText && noteText.trim()) {
-                  const newNote = {
-                    id: Date.now().toString(),
-                    text: noteText.trim(),
-                    timestamp: new Date().toISOString()
-                  }
-                  setEditedProject({
-                    ...editedProject,
-                    notes: [...(editedProject.notes || []), newNote]
-                  })
+                const newNote = {
+                  id: Date.now().toString(),
+                  text: '',
+                  timestamp: new Date().toISOString()
                 }
+                setEditedProject({
+                  ...editedProject,
+                  notes: [...(editedProject.notes || []), newNote]
+                })
               }}
               className="px-3 py-1 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700"
             >
@@ -119,8 +116,21 @@ export default function ProjectView({ project, onBack, onUpdate, onDelete, darkM
             ) : (
               (editedProject.notes || []).map(note => (
                 <div key={note.id} className="border dark:border-gray-700 dark:bg-gray-800/50 rounded-lg p-4">
-                  <p className="text-sm dark:text-gray-200 mb-2">{note.text}</p>
-                  <div className="flex items-center justify-between">
+                  <textarea
+                    value={note.text}
+                    onChange={(e) => {
+                      setEditedProject({
+                        ...editedProject,
+                        notes: editedProject.notes.map(n =>
+                          n.id === note.id ? { ...n, text: e.target.value } : n
+                        )
+                      })
+                    }}
+                    placeholder="Skriv din anteckning här..."
+                    className="w-full text-sm dark:text-gray-200 dark:bg-transparent bg-transparent border-0 outline-none resize-none min-h-[60px] placeholder-gray-400 dark:placeholder-gray-500"
+                    rows={Math.max(2, (note.text || '').split('\n').length)}
+                  />
+                  <div className="flex items-center justify-between mt-2 pt-2 border-t dark:border-gray-700">
                     <span className="text-xs text-gray-500 dark:text-gray-400">
                       📅 {new Date(note.timestamp).toLocaleString('sv-SE', {
                         year: 'numeric',
