@@ -227,24 +227,35 @@ export default function ProjectView({ project, onBack, onUpdate, onDelete, darkM
           </div>
         </div>
 
-        {/* Shared Images Section - Visible on all tabs */}
+        {/* Shared Files Section - Visible on all tabs */}
         <div className="mt-6 bg-white dark:bg-gray-800 p-6 rounded-xl border dark:border-gray-700">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="font-semibold dark:text-white">📷 Bilder</h3>
+            <h3 className="font-semibold dark:text-white">📎 Bilder & Filer</h3>
             <div>
               <input
                 type="file"
-                accept="image/*"
+                accept="image/*,application/pdf"
                 onChange={async (e) => {
                   const file = e.target.files?.[0]
                   if (file) {
-                    const compressed = await compressImage(file)
+                    const isPdf = file.type === 'application/pdf'
+                    let fileData
+                    if (isPdf) {
+                      fileData = await new Promise((resolve) => {
+                        const reader = new FileReader()
+                        reader.onload = (ev) => resolve(ev.target.result)
+                        reader.readAsDataURL(file)
+                      })
+                    } else {
+                      fileData = await compressImage(file)
+                    }
                     setEditedProject({
                       ...editedProject,
                       shared_images: [...(editedProject.shared_images || []), {
                         id: Date.now().toString(),
-                        image: compressed,
-                        caption: '',
+                        image: fileData,
+                        caption: isPdf ? file.name : '',
+                        type: isPdf ? 'pdf' : 'image',
                         timestamp: new Date().toISOString()
                       }]
                     })
@@ -257,24 +268,38 @@ export default function ProjectView({ project, onBack, onUpdate, onDelete, darkM
                 htmlFor="shared-image-upload"
                 className="px-3 py-1 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 cursor-pointer"
               >
-                + Lägg till bild
+                + Lägg till bild/PDF
               </label>
             </div>
           </div>
 
           {(editedProject.shared_images || []).length === 0 ? (
             <p className="text-gray-500 dark:text-gray-400 text-sm text-center py-8">
-              Inga bilder än. Klicka på "+ Lägg till bild" för att ladda upp.
+              Inga filer än. Klicka på "+ Lägg till bild/PDF" för att ladda upp.
             </p>
           ) : (
             <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
               {(editedProject.shared_images || []).map(img => (
                 <div key={img.id} className="group relative border dark:border-gray-700 rounded-lg overflow-hidden">
-                  <img
-                    src={img.image}
-                    alt={img.caption || 'Bild'}
-                    className="w-full h-48 object-cover"
-                  />
+                  {img.type === 'pdf' ? (
+                    <a
+                      href={img.image}
+                      download={img.caption || 'dokument.pdf'}
+                      className="flex flex-col items-center justify-center w-full h-48 bg-red-50 dark:bg-red-900/20 hover:bg-red-100 dark:hover:bg-red-900/30 transition"
+                    >
+                      <svg className="w-12 h-12 text-red-500 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                      </svg>
+                      <span className="text-xs font-medium text-red-600 dark:text-red-400">PDF</span>
+                      <span className="text-xs text-gray-500 dark:text-gray-400 mt-1 px-2 text-center truncate max-w-full">{img.caption || 'dokument.pdf'}</span>
+                    </a>
+                  ) : (
+                    <img
+                      src={img.image}
+                      alt={img.caption || 'Bild'}
+                      className="w-full h-48 object-cover"
+                    />
+                  )}
                   <div className="p-2">
                     <input
                       type="text"
@@ -287,13 +312,13 @@ export default function ProjectView({ project, onBack, onUpdate, onDelete, darkM
                           )
                         })
                       }}
-                      placeholder="Bildtext..."
+                      placeholder={img.type === 'pdf' ? 'Filnamn...' : 'Bildtext...'}
                       className="w-full text-xs dark:text-gray-200 dark:bg-transparent bg-transparent border-0 outline-none placeholder-gray-400 dark:placeholder-gray-500"
                     />
                   </div>
                   <button
                     onClick={() => {
-                      if (confirm('Är du säker på att du vill ta bort denna bild?')) {
+                      if (confirm('Är du säker på att du vill ta bort denna fil?')) {
                         setEditedProject({
                           ...editedProject,
                           shared_images: editedProject.shared_images.filter(i => i.id !== img.id)
