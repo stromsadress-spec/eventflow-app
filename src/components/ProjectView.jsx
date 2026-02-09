@@ -282,10 +282,18 @@ export default function ProjectView({ project, onBack, onUpdate, onDelete, darkM
               {(editedProject.shared_images || []).map(img => (
                 <div key={img.id} className="group relative border dark:border-gray-700 rounded-lg overflow-hidden">
                   {img.type === 'pdf' ? (
-                    <a
-                      href={img.image}
-                      target="_blank"
-                      rel="noopener noreferrer"
+                    <div
+                      onClick={() => {
+                        const byteString = atob(img.image.split(',')[1])
+                        const ab = new ArrayBuffer(byteString.length)
+                        const ia = new Uint8Array(ab)
+                        for (let i = 0; i < byteString.length; i++) {
+                          ia[i] = byteString.charCodeAt(i)
+                        }
+                        const blob = new Blob([ab], { type: 'application/pdf' })
+                        const url = URL.createObjectURL(blob)
+                        window.open(url, '_blank')
+                      }}
                       className="flex flex-col items-center justify-center w-full h-48 bg-red-50 dark:bg-red-900/20 hover:bg-red-100 dark:hover:bg-red-900/30 transition cursor-pointer"
                     >
                       <svg className="w-12 h-12 text-red-500 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -293,7 +301,7 @@ export default function ProjectView({ project, onBack, onUpdate, onDelete, darkM
                       </svg>
                       <span className="text-xs font-medium text-red-600 dark:text-red-400">PDF</span>
                       <span className="text-xs text-gray-500 dark:text-gray-400 mt-1 px-2 text-center truncate max-w-full">{img.caption || 'dokument.pdf'}</span>
-                    </a>
+                    </div>
                   ) : (
                     <img
                       src={img.image}
